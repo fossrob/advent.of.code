@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
-	"slices"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -39,16 +39,31 @@ func puzzle1(ranges [][]int, items []int) (freshItems int) {
 
 func puzzle2(ranges [][]int) (freshItems int) {
 
-	freshSlice := []int{}
+	// sort the ranges
+	sort.Slice(ranges, func(i, j int) bool {
+		return ranges[i][0] < ranges[j][0]
+	})
 
-	for _, r := range ranges {
-		for i := r[0]; i <= r[1]; i++ {
-			freshSlice = append(freshSlice, i)
+	prevSlice := []int{0, 0}
+	// check for overlaps and add the range for subsequent ranges
+	for key, rangeSlice := range ranges {
+		// fmt.Print(rangeSlice)
+		if rangeSlice[1] <= prevSlice[1] {
+			// this entire range exists inside the previous, skip it
+			// fmt.Print(" ", rangeSlice[1], " <= ", prevSlice[1], " skip")
+			continue
+		} else if rangeSlice[0] <= prevSlice[1] {
+			// range overlaps, new range starts after old range ends
+			freshItems += rangeSlice[1] - prevSlice[1]
+			// fmt.Print(" ", prevSlice[1]+1, " - ", rangeSlice[1], " overlap (", rangeSlice[1]-prevSlice[1], ")")
+		} else {
+			// new range
+			freshItems += (rangeSlice[1] - rangeSlice[0]) + 1
+			// fmt.Print(" ", rangeSlice[0], " - ", rangeSlice[1], " new (", (rangeSlice[1]-rangeSlice[0])+1, ")")
 		}
+		prevSlice = ranges[key]
+		// fmt.Println()
 	}
-
-	slices.Sort(freshSlice)
-	freshItems = len(slices.Compact(freshSlice))
 
 	return freshItems
 }
